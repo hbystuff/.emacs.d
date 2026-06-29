@@ -65,7 +65,7 @@
       completion-category-defaults nil
       completion-category-overrides '((file (styles partial-completion))))
 (with-eval-after-load 'evil
-  (define-key evil-normal-state-map (kbd "C-p") 'find-file))
+  (define-key evil-normal-state-map (kbd "C-p") 'project-find-file))
 
 (require 'evil)
 (evil-mode 1)
