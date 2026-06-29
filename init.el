@@ -24,6 +24,10 @@
 (setq display-line-numbers-type t)
 (setq-default indent-tabs-mode nil)  ; Use spaces instead of tabs
 
+;; Put the config stuff somewhere else
+(setq custom-file (concat user-emacs-directory "custom-vars.el"))
+(load custom-file 'noerror)
+
 ;;===========================================
 ;; Package manager
 (require 'package)
@@ -54,18 +58,3 @@
   (define-key evil-normal-state-map (kbd "-") 'evil-window-decrease-width)
   (define-key evil-normal-state-map (kbd "M-=") 'evil-window-increase-height)
   (define-key evil-normal-state-map (kbd "M--") 'evil-window-decrease-height))
-
-;;============================================
-;; Auto stuff.
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages '(evil)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
