@@ -14,6 +14,10 @@
 ;; Looks and feels
 (load-theme 'modus-vivendi t)
 (set-frame-font "Consolas 12" nil t)
+(setq ring-bell-function 'ignore)
+(setq scroll-step 1)
+(setq scroll-conservatively 10000)
+(setq scroll-margin 0) ; Set to 1 or 2 if you want the bump to trigger before the absolute edge
 
 ;; Disable backup and auto-save files completely
 (setq make-backup-files nil)
@@ -49,6 +53,7 @@
 ;;===========================================
 ;; Evil mode setup
 ;; Set up Vim-like behaviors before loading
+(setq evil-shift-width 2)
 (setq evil-want-integration t)
 (setq evil-want-keybinding nil) ; Set to nil if you ever want evil-collection later
 (setq evil-vsplit-window-right t)
@@ -70,8 +75,74 @@
 (require 'evil)
 (evil-mode 1)
 
+;; '_' should be part of my search
+(with-eval-after-load 'evil
+  (defun my-evil-underscore-syntax ()
+    (modify-syntax-entry ?_ "w"))
+  ;; Apply globally to the default state and common coding hooks
+  (modify-syntax-entry ?_ "w")
+  (add-hook 'c-mode-common-hook #'my-evil-underscore-syntax)
+  (add-hook 'c++-mode-hook #'my-evil-underscore-syntax))
+
+(defun my-copy-file-path ()
+  "Copy the current buffer's full file path to the system clipboard."
+  (interactive)
+  (let ((filename (buffer-file-name)))
+    (if filename
+        (progn
+          (kill-new filename)
+          (message "Copied: %s" filename))
+      (message "Buffer is not visiting a file!"))))
+
+(with-eval-after-load 'evil
+  (define-key evil-normal-state-map (kbd "f p") 'my-copy-file-path))
+
 (with-eval-after-load 'evil-maps
   (define-key evil-normal-state-map (kbd "=") 'evil-window-increase-width)
   (define-key evil-normal-state-map (kbd "-") 'evil-window-decrease-width)
   (define-key evil-normal-state-map (kbd "M-=") 'evil-window-increase-height)
   (define-key evil-normal-state-map (kbd "M--") 'evil-window-decrease-height))
+
+
+;;===============================================================
+;; Manual simple Auto-complete
+(unless (package-installed-p 'corfu) (package-install 'corfu))
+(unless (package-installed-p 'cape) (package-install 'cape))
+
+(require 'corfu)
+(global-corfu-mode 1)
+
+;; Setup Corfu behaviors
+(setq corfu-auto nil)
+(setq corfu-quit-no-match 'separator)
+(setq corfu-preview-current nil)    ; Stops auto-inserting text while cycling
+
+;; Explicitly map navigation directly into corfu-map so it works instantly
+(define-key corfu-map (kbd "C-j") 'corfu-next)
+(define-key corfu-map (kbd "C-k") 'corfu-previous)
+(define-key corfu-map (kbd "C-n") 'corfu-next)
+(define-key corfu-map (kbd "C-p") 'corfu-previous)
+
+;; Configure dabbrev scanner
+(require 'dabbrev)
+(setq dabbrev--abbrev-char-regexp "\\sw\\|\\s_")
+(setq dabbrev-case-fold-search t)
+(setq dabbrev-case-replace nil)
+(setq dabbrev-check-other-buffers t)
+
+;; Set up Cape for robust scanning
+(require 'cape)
+(defun my-setup-buffer-completion ()
+  (setq-local completion-at-point-functions '(cape-dabbrev)))
+
+(add-hook 'prog-mode-hook #'my-setup-buffer-completion)
+(add-hook 'text-mode-hook #'my-setup-buffer-completion)
+
+;; Setup bindings and handle Evil conflicts
+(with-eval-after-load 'evil
+  ;; Bind C-n to trigger the popup menu inside Insert Mode
+  (define-key evil-insert-state-map (kbd "C-n") 'completion-at-point)
+  
+  ;; Unbind Evil's defaults so they drop down to corfu-map when the popup is open
+  (define-key evil-insert-state-map (kbd "C-j") nil)
+  (define-key evil-insert-state-map (kbd "C-k") nil))
