@@ -55,12 +55,16 @@
 (defalias 'reload-conf 'reload-config-file)
 
 ;; hlsl-mode
-(let ((hlsl-mode-path (expand-file-name "hlsl-mode.el" user-emacs-directory)))
+(let ((hlsl-mode-path (expand-file-name "libs/hlsl-mode.el" user-emacs-directory)))
   (when (file-exists-p hlsl-mode-path)
     (load hlsl-mode-path t)
     ;; Map HLSL file extensions to the newly loaded mode
     (add-to-list 'auto-mode-alist '("\\.hlsl\\'" . hlsl-mode))
     (add-to-list 'auto-mode-alist '("\\.hlsli\\'" . hlsl-mode))))
+
+; llvm-mode
+(let ((llvm-mode-src (expand-file-name "libs/llvm-mode.el" user-emacs-directory)))
+  (load llvm-mode-src t))
 
 ;;===========================================
 ;; Package manager
@@ -74,21 +78,7 @@
 (unless (package-installed-p 'evil) (package-install 'evil))
 (unless (package-installed-p 'vertico) (package-install 'vertico))
 (unless (package-installed-p 'orderless) (package-install 'orderless))
-(unless (package-installed-p 'glsl-mode) (package-install 'glsl-mode))
- 
-; Fetch llvm-mode
-(let ((llvm-mode-src (expand-file-name "llvm-mode.el" user-emacs-directory)))
-  (unless (file-exists-p llvm-mode-src)
-    (message "Downloading llvm-mode.el from LLVM mirror...")
-    (url-copy-file 
-     "https://llvm.googlesource.com/llvm/+/refs/heads/stable/utils/emacs/llvm-mode.el?format=TEXT" 
-     llvm-mode-src)
-    ;; The Google Source mirror returns base64 text, decode it inline
-    (with-current-buffer (find-file-noselect llvm-mode-src)
-      (base64-decode-region (point-min) (point-max))
-      (save-buffer)
-      (kill-buffer)))
-  (load llvm-mode-src t))
+(unless (package-installed-p 'glsl-mode) (package-install 'glsl-mode)) 
 
 ;;===========================================
 ;; Evil mode setup
