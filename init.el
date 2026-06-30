@@ -54,6 +54,14 @@
 (defalias 'conf 'open-config-file)
 (defalias 'reload-conf 'reload-config-file)
 
+;; hlsl-mode
+(let ((hlsl-mode-path (expand-file-name "hlsl-mode.el" user-emacs-directory)))
+  (when (file-exists-p hlsl-mode-path)
+    (load hlsl-mode-path t)
+    ;; Map HLSL file extensions to the newly loaded mode
+    (add-to-list 'auto-mode-alist '("\\.hlsl\\'" . hlsl-mode))
+    (add-to-list 'auto-mode-alist '("\\.hlsli\\'" . hlsl-mode))))
+
 ;;===========================================
 ;; Package manager
 (require 'package)
@@ -66,6 +74,9 @@
 (unless (package-installed-p 'evil) (package-install 'evil))
 (unless (package-installed-p 'vertico) (package-install 'vertico))
 (unless (package-installed-p 'orderless) (package-install 'orderless))
+(unless (package-installed-p 'glsl-mode) (package-install 'glsl-mode))
+ 
+; Fetch llvm-mode
 (let ((llvm-mode-src (expand-file-name "llvm-mode.el" user-emacs-directory)))
   (unless (file-exists-p llvm-mode-src)
     (message "Downloading llvm-mode.el from LLVM mirror...")
@@ -124,13 +135,16 @@
 )
 
 (defun my-copy-file-path ()
-  "Copy the current buffer's full file path to the system clipboard."
+  "Copy the current buffer's full file path to the system clipboard using Windows backslashes."
   (interactive)
   (let ((filename (buffer-file-name)))
     (if filename
-        (progn
-          (kill-new filename)
-          (message "Copied: %s" filename))
+        (let ((path filename))
+          (when (string-match "^/\\([a-zA-Z]\\)/" path)
+            (setq path (replace-match "\\1:/" t nil path)))
+          (setq path (replace-regexp-in-string "/" "\\\\" path))
+          (kill-new path)
+          (message "Copied: %s" path))
       (message "Buffer is not visiting a file!"))))
 
 (with-eval-after-load 'evil
