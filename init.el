@@ -20,6 +20,8 @@
 (setq scroll-step 1)
 (setq scroll-conservatively 10000)
 (setq scroll-margin 0) ; Set to 1 or 2 if you want the bump to trigger before the absolute edge
+(setq-default case-fold-search nil)
+(setq evil-ex-search-case 'sensitive)
 
 ;; Disable backup and auto-save files completely
 (setq make-backup-files nil)
@@ -44,7 +46,13 @@
   "Quickly open the main Emacs initialization file."
   (interactive)
   (find-file user-init-file))
+(defun reload-config-file ()
+  "Reload the main Emacs initialization file on the fly."
+  (interactive)
+  (load-file user-init-file)
+  (message "Configuration reloaded successfully!"))
 (defalias 'conf 'open-config-file)
+(defalias 'reload-conf 'reload-config-file)
 
 ;;===========================================
 ;; Package manager
@@ -58,6 +66,18 @@
 (unless (package-installed-p 'evil) (package-install 'evil))
 (unless (package-installed-p 'vertico) (package-install 'vertico))
 (unless (package-installed-p 'orderless) (package-install 'orderless))
+(let ((llvm-mode-src (expand-file-name "llvm-mode.el" user-emacs-directory)))
+  (unless (file-exists-p llvm-mode-src)
+    (message "Downloading llvm-mode.el from LLVM mirror...")
+    (url-copy-file 
+     "https://llvm.googlesource.com/llvm/+/refs/heads/stable/utils/emacs/llvm-mode.el?format=TEXT" 
+     llvm-mode-src)
+    ;; The Google Source mirror returns base64 text, decode it inline
+    (with-current-buffer (find-file-noselect llvm-mode-src)
+      (base64-decode-region (point-min) (point-max))
+      (save-buffer)
+      (kill-buffer)))
+  (load llvm-mode-src t))
 
 ;;===========================================
 ;; Evil mode setup
@@ -91,7 +111,17 @@
   ;; Apply globally to the default state and common coding hooks
   (modify-syntax-entry ?_ "w")
   (add-hook 'c-mode-common-hook #'my-evil-underscore-syntax)
-  (add-hook 'c++-mode-hook #'my-evil-underscore-syntax))
+  (add-hook 'c++-mode-hook #'my-evil-underscore-syntax)
+
+  (defun my-llvm-identifier-syntax ()
+      (modify-syntax-entry ?% "w")
+      (modify-syntax-entry ?. "w"))
+  (add-hook 'llvm-mode-hook #'my-llvm-identifier-syntax)
+
+  (defun my-elisp-hyphen-syntax ()
+      (modify-syntax-entry ?- "w"))
+  (add-hook 'emacs-lisp-mode-hook #'my-elisp-hyphen-syntax)
+)
 
 (defun my-copy-file-path ()
   "Copy the current buffer's full file path to the system clipboard."
