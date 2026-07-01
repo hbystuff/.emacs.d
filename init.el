@@ -15,7 +15,8 @@
 
 ;; Looks and feels
 (load-theme 'modus-vivendi t)
-(set-frame-font "Consolas 12" nil t)
+; (set-frame-font "Consolas 12" nil t)
+(set-frame-font "FixedSys" nil t)
 (setq ring-bell-function 'ignore)
 (setq scroll-step 1)
 (setq scroll-conservatively 10000)
@@ -51,8 +52,18 @@
   (interactive)
   (load-file user-init-file)
   (message "Configuration reloaded successfully!"))
+(defun my/dired-sidebar-left ()
+  "Open dired for current dir in a left-side window."
+  (interactive)
+  (let ((dir default-directory))
+    (select-window
+     (split-window (frame-root-window) nil 'left))
+    (dired dir)
+    (setq-local window-size-fixed 'width)))
 (defalias 'conf 'open-config-file)
 (defalias 'reload-conf 'reload-config-file)
+(defalias 'confr 'reload-config-file)
+(defalias 'NT 'my/dired-sidebar-left)
 
 ;; hlsl-mode
 (let ((hlsl-mode-path (expand-file-name "libs/hlsl-mode.el" user-emacs-directory)))
