@@ -12,6 +12,7 @@
 (when (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
 (setq auto-revert-use-notify t)         ; Use OS-level file notifications for instant reloads
 (setq global-auto-revert-non-file-buffers t) ; Automatically refresh Dired and other utility buffers
+(add-hook 'dired-mode-hook 'auto-revert-mode)
 
 ;; Looks and feels
 (load-theme 'modus-vivendi t)
